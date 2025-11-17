@@ -7,6 +7,7 @@ import CaseStudies from './components/CaseStudies'
 import Timeline from './components/Timeline'
 import TechStack from './components/TechStack'
 import Pricing from './components/Pricing'
+import ROI from './components/ROI'
 import CTA from './components/CTA'
 
 // Lazy-load heavy layers so they don't block initial paint and are easy to skip in safe mode
@@ -62,6 +63,7 @@ function App() {
           )}
           <TechStack />
           <Pricing />
+          <ROI />
           <CTA />
         </main>
 
