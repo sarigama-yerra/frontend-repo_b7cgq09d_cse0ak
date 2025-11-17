@@ -12,7 +12,7 @@ const services = [
 
 export default function Services() {
   return (
-    <section className="relative py-24">
+    <section id="services" className="relative py-24">
       <div className="mx-auto max-w-6xl px-6">
         <motion.h2
           className="text-center text-3xl sm:text-5xl font-bold text-white/90"
