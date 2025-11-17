@@ -4,11 +4,15 @@ import Services from './components/Services'
 import Timeline from './components/Timeline'
 import TechStack from './components/TechStack'
 import CTA from './components/CTA'
+import FX from './components/FX'
 
 function App() {
   return (
     <div className="min-h-screen text-white bg-black selection:bg-cyan-400/20 selection:text-white">
       <Background />
+      {/* Global grain + spotlight/cursor FX */}
+      <div className="pointer-events-none fixed inset-0 z-50 opacity-[0.08] grain" />
+      <FX />
 
       {/* Cinematic page sections */}
       <main className="relative">
