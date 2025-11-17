@@ -1,15 +1,17 @@
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useState, lazy, Suspense } from 'react'
 import Navbar from './components/Navbar'
 import Background from './components/Background'
 import Hero from './components/Hero'
 import Services from './components/Services'
 import CaseStudies from './components/CaseStudies'
 import Timeline from './components/Timeline'
-import NeuralLab from './components/NeuralLab'
 import TechStack from './components/TechStack'
 import Pricing from './components/Pricing'
 import CTA from './components/CTA'
-import FX from './components/FX'
+
+// Lazy-load heavy layers so they don't block initial paint and are easy to skip in safe mode
+const FX = lazy(() => import('./components/FX'))
+const NeuralLab = lazy(() => import('./components/NeuralLab'))
 
 function App() {
   const [forceSafe, setForceSafe] = useState(false)
@@ -37,9 +39,15 @@ function App() {
       <div className="min-h-screen text-white bg-black selection:bg-cyan-400/20 selection:text-white">
         <Background />
         <Navbar />
-        {/* Global grain + spotlight/cursor FX */}
+        {/* Global grain overlay */}
         <div className="pointer-events-none fixed inset-0 z-50 opacity-[0.08] grain" />
-        {!safe && <FX />}
+
+        {/* Heavy FX are skipped entirely in safe mode */}
+        {!safe && (
+          <Suspense fallback={null}>
+            <FX />
+          </Suspense>
+        )}
 
         {/* Cinematic page sections */}
         <main className="relative">
@@ -47,7 +55,11 @@ function App() {
           <Services />
           <CaseStudies />
           <Timeline />
-          {!safe && <NeuralLab />}
+          {!safe && (
+            <Suspense fallback={null}>
+              <NeuralLab />
+            </Suspense>
+          )}
           <TechStack />
           <Pricing />
           <CTA />
@@ -96,16 +108,13 @@ function ErrorBoundary({ children, onTrip }) {
 
   return (
     <Boundary setHasError={setHasError}>
-      {hasError ? (
-        <div className="min-h-screen flex items-center justify-center text-center p-6">
-          <div className="max-w-md">
-            <h1 className="text-2xl font-bold text-white/90">Recovered in Safe Mode</h1>
-            <p className="mt-3 text-white/70">Heavy effects were disabled to stabilize your device. You can refresh or add ?safe=1 to keep it lightweight.</p>
-          </div>
+      {/* Instead of blocking the UI, we show a small, non-intrusive banner while continuing to render the app in safe mode */}
+      {hasError && (
+        <div className="fixed bottom-3 left-1/2 -translate-x-1/2 z-[100] rounded-full border border-white/15 bg-black/70 px-4 py-2 text-xs text-white/80 backdrop-blur">
+          Recovered in Safe Mode — heavy effects paused for stability. Add ?safe=1 to keep it lightweight.
         </div>
-      ) : (
-        children
       )}
+      {children}
     </Boundary>
   )
 }
@@ -122,9 +131,7 @@ class Boundary extends React.Component {
     this.props.setHasError(true)
   }
   render() {
-    if (this.state.hasError) {
-      return this.props.children
-    }
+    // Always render children; ErrorBoundary above decides how to notify
     return this.props.children
   }
 }
