@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { useScroll, useVelocity, useMotionValue, useSpring } from 'framer-motion'
 
-// Husquay-inspired interaction layer: custom cursor, spotlight, particle trail, magnetic hover
+// Interaction layer: custom cursor, spotlight, particle trail, magnetic hover
 export default function FX() {
   const spotlightRef = useRef(null)
   const cursorRef = useRef(null)
@@ -81,6 +81,9 @@ export default function FX() {
 
     // Draw loop
     const loop = () => {
+      // Clear the canvas each frame to avoid opaque buildup overlays
+      ctx.clearRect(0, 0, canvas.width, canvas.height)
+
       // Ease cursor position
       state.x += (state.tx - state.x) * 0.18
       state.y += (state.ty - state.y) * 0.18
@@ -91,10 +94,6 @@ export default function FX() {
       // Trail
       state.trail.push({ x: state.x, y: state.y })
       if (state.trail.length > state.maxTrail) state.trail.shift()
-
-      // Fade canvas
-      ctx.fillStyle = 'rgba(0,0,0,0.22)'
-      ctx.fillRect(0, 0, canvas.width, canvas.height)
 
       // Draw particles along trail with color shift
       for (let i = 0; i < state.trail.length; i++) {
@@ -112,8 +111,7 @@ export default function FX() {
     }
 
     // Kick off with a clear frame
-    ctx.fillStyle = 'rgba(0,0,0,1)'
-    ctx.fillRect(0, 0, canvas.width, canvas.height)
+    ctx.clearRect(0, 0, canvas.width, canvas.height)
     raf = requestAnimationFrame(loop)
 
     return () => {

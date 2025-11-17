@@ -11,13 +11,14 @@ import CTA from './components/CTA'
 import FX from './components/FX'
 
 function App() {
+  const safe = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('safe') === '1'
   return (
     <div className="min-h-screen text-white bg-black selection:bg-cyan-400/20 selection:text-white">
       <Background />
       <Navbar />
       {/* Global grain + spotlight/cursor FX */}
       <div className="pointer-events-none fixed inset-0 z-50 opacity-[0.08] grain" />
-      <FX />
+      {!safe && <FX />}
 
       {/* Cinematic page sections */}
       <main className="relative">
@@ -25,7 +26,7 @@ function App() {
         <Services />
         <CaseStudies />
         <Timeline />
-        <NeuralLab />
+        {!safe && <NeuralLab />}
         <TechStack />
         <Pricing />
         <CTA />
