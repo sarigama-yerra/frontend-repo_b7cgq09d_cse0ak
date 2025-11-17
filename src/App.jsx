@@ -1,3 +1,4 @@
+import React, { useEffect, useMemo, useState } from 'react'
 import Navbar from './components/Navbar'
 import Background from './components/Background'
 import Hero from './components/Hero'
@@ -11,29 +12,50 @@ import CTA from './components/CTA'
 import FX from './components/FX'
 
 function App() {
-  const safe = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('safe') === '1'
+  const [forceSafe, setForceSafe] = useState(false)
+
+  const urlSafe = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('safe') === '1'
+  const prefersReduced = typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches
+
+  const safe = useMemo(() => urlSafe || prefersReduced || forceSafe, [urlSafe, prefersReduced, forceSafe])
+
+  // Toggle a CSS class for safe-mode (restores system cursor, etc.)
+  useEffect(() => {
+    const root = document.documentElement
+    const body = document.body
+    if (safe) {
+      root.classList.add('safe-mode')
+      body.classList.add('safe-mode')
+    } else {
+      root.classList.remove('safe-mode')
+      body.classList.remove('safe-mode')
+    }
+  }, [safe])
+
   return (
-    <div className="min-h-screen text-white bg-black selection:bg-cyan-400/20 selection:text-white">
-      <Background />
-      <Navbar />
-      {/* Global grain + spotlight/cursor FX */}
-      <div className="pointer-events-none fixed inset-0 z-50 opacity-[0.08] grain" />
-      {!safe && <FX />}
+    <ErrorBoundary onTrip={() => setForceSafe(true)}>
+      <div className="min-h-screen text-white bg-black selection:bg-cyan-400/20 selection:text-white">
+        <Background />
+        <Navbar />
+        {/* Global grain + spotlight/cursor FX */}
+        <div className="pointer-events-none fixed inset-0 z-50 opacity-[0.08] grain" />
+        {!safe && <FX />}
 
-      {/* Cinematic page sections */}
-      <main className="relative">
-        <Hero />
-        <Services />
-        <CaseStudies />
-        <Timeline />
-        {!safe && <NeuralLab />}
-        <TechStack />
-        <Pricing />
-        <CTA />
-      </main>
+        {/* Cinematic page sections */}
+        <main className="relative">
+          <Hero />
+          <Services />
+          <CaseStudies />
+          <Timeline />
+          {!safe && <NeuralLab />}
+          <TechStack />
+          <Pricing />
+          <CTA />
+        </main>
 
-      <Footer />
-    </div>
+        <Footer />
+      </div>
+    </ErrorBoundary>
   )
 }
 
@@ -61,6 +83,50 @@ function Footer() {
       </div>
     </footer>
   )
+}
+
+function ErrorBoundary({ children, onTrip }) {
+  const [hasError, setHasError] = useState(false)
+
+  useEffect(() => {
+    if (!hasError) return
+    // Switch to safe mode automatically when any runtime error surfaces
+    onTrip && onTrip()
+  }, [hasError, onTrip])
+
+  return (
+    <Boundary setHasError={setHasError}>
+      {hasError ? (
+        <div className="min-h-screen flex items-center justify-center text-center p-6">
+          <div className="max-w-md">
+            <h1 className="text-2xl font-bold text-white/90">Recovered in Safe Mode</h1>
+            <p className="mt-3 text-white/70">Heavy effects were disabled to stabilize your device. You can refresh or add ?safe=1 to keep it lightweight.</p>
+          </div>
+        </div>
+      ) : (
+        children
+      )}
+    </Boundary>
+  )
+}
+
+class Boundary extends React.Component {
+  constructor(props) {
+    super(props)
+    this.state = { hasError: false }
+  }
+  static getDerivedStateFromError() {
+    return { hasError: true }
+  }
+  componentDidCatch() {
+    this.props.setHasError(true)
+  }
+  render() {
+    if (this.state.hasError) {
+      return this.props.children
+    }
+    return this.props.children
+  }
 }
 
 export default App
